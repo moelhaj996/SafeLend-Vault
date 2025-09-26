@@ -1,6 +1,7 @@
 require("@nomicfoundation/hardhat-toolbox");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
+require("hardhat-contract-sizer");
 require("dotenv").config();
 
 module.exports = {
@@ -61,5 +62,12 @@ module.exports = {
   },
   mocha: {
     timeout: 300000
+  },
+  contractSizer: {
+    alphaSort: true,
+    runOnCompile: true,
+    disambiguatePaths: false,
+    strict: true,
+    only: [':SafeLendVault$', ':Liquidator$', ':LendingPool$', ':InterestRateModel$']
   }
 };
