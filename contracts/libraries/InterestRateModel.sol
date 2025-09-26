@@ -18,7 +18,16 @@ contract InterestRateModel is IInterestRateModel {
         if (borrows == 0) {
             return 0;
         }
-        return (borrows * 1e18) / (cash + borrows - reserves);
+
+        uint256 totalSupply = cash + borrows - reserves;
+        if (totalSupply == 0) {
+            return 0;
+        }
+
+        // Prevent overflow in multiplication
+        require(borrows <= type(uint256).max / 1e18, "Calculation overflow");
+
+        return (borrows * 1e18) / totalSupply;
     }
 
     function getBorrowRate(

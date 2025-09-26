@@ -90,7 +90,7 @@ contract SafeLendVault is ISafeLendVault, ERC20, AccessControl, ReentrancyGuard,
 
         amount = (shares * totalAssets) / totalShares;
 
-        require(amount <= positions[msg.sender].collateralAmount, "Insufficient collateral");
+        require(amount <= positions[msg.sender].collateralAmount, "Withdrawal would make position undercollateralized");
 
         uint256 healthFactorAfter = calculateHealthFactorAfterWithdraw(msg.sender, amount);
         require(healthFactorAfter >= FACTOR_PRECISION, "Withdrawal would make position undercollateralized");
@@ -149,8 +149,10 @@ contract SafeLendVault is ISafeLendVault, ERC20, AccessControl, ReentrancyGuard,
         if (repayAmount >= position.accumulatedInterest) {
             uint256 principalRepay = repayAmount - position.accumulatedInterest;
             position.accumulatedInterest = 0;
-            position.borrowedAmount -= principalRepay;
-            totalBorrows -= principalRepay;
+            if (principalRepay > 0) {
+                position.borrowedAmount -= principalRepay;
+                totalBorrows -= principalRepay;
+            }
         } else {
             position.accumulatedInterest -= repayAmount;
         }
@@ -284,8 +286,25 @@ contract SafeLendVault is ISafeLendVault, ERC20, AccessControl, ReentrancyGuard,
         _unpause();
     }
 
-    function updateConfig(VaultConfig calldata newConfig) external onlyRole(ADMIN_ROLE) {
-        config = newConfig;
-        interestRateModel = IInterestRateModel(newConfig.interestRateModel);
+    function updateConfig(
+        uint256 _collateralFactor,
+        uint256 _liquidationThreshold,
+        uint256 _liquidationBonus,
+        uint256 _reserveFactor,
+        address _interestRateModel
+    ) external onlyRole(ADMIN_ROLE) {
+        require(_collateralFactor <= 1e18, "Invalid collateral factor");
+        require(_liquidationThreshold <= 1e18, "Invalid liquidation threshold");
+        require(_liquidationBonus <= 1e18, "Invalid liquidation bonus");
+        require(_reserveFactor <= 1e18, "Invalid reserve factor");
+        require(_interestRateModel != address(0), "Invalid interest rate model");
+
+        config.collateralFactor = _collateralFactor;
+        config.liquidationThreshold = _liquidationThreshold;
+        config.liquidationBonus = _liquidationBonus;
+        config.reserveFactor = _reserveFactor;
+        config.interestRateModel = _interestRateModel;
+
+        interestRateModel = IInterestRateModel(_interestRateModel);
     }
 }

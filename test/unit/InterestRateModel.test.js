@@ -241,8 +241,8 @@ describe("InterestRateModel", function () {
       const borrows = ethers.MaxUint256 / 2n;
       const reserves = 0;
 
-      const utilRate = await model.utilizationRate(cash, borrows, reserves);
-      expect(utilRate).to.equal(ethers.parseEther("1"));
+      await expect(model.utilizationRate(cash, borrows, reserves))
+        .to.be.revertedWith("Calculation overflow");
     });
   });
 });

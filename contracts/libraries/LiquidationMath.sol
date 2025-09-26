@@ -11,7 +11,8 @@ library LiquidationMath {
         uint256 liquidationThreshold
     ) internal pure returns (uint256) {
         if (debtValue == 0) return type(uint256).max;
-        return (collateralValue * liquidationThreshold) / (debtValue * PRECISION);
+        // Return health factor in 18 decimal precision
+        return (collateralValue * liquidationThreshold) / debtValue;
     }
 
     function isLiquidatable(uint256 healthFactor) internal pure returns (bool) {
