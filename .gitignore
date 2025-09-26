@@ -1,1 +1,33 @@
 node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+cache
+artifacts
+
+# Gas reporting
+gas-report.txt
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+test-results
+*.log
+
+# Build
+dist
+build
+
+# Deployment
+deployments/localhost
+deployments/hardhat
