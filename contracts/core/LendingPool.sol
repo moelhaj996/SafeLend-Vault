@@ -2,7 +2,7 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "../interfaces/ILendingPool.sol";
 import "../interfaces/IInterestRateModel.sol";
 
@@ -12,7 +12,7 @@ contract LendingPool is ILendingPool, Ownable, ReentrancyGuard {
 
     uint256 private constant SECONDS_PER_YEAR = 365 days;
 
-    constructor(address _interestRateModel) {
+    constructor(address _interestRateModel) Ownable(msg.sender) {
         interestRateModel = IInterestRateModel(_interestRateModel);
         reserveData.isActive = true;
         reserveData.lastUpdateTimestamp = block.timestamp;

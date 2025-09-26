@@ -3,7 +3,21 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:unit": "hardhat test test/unit/*.js",
+    "test:integration": "hardhat test test/integration/*.js",
+    "test:fuzz": "echidna test/fuzz/VaultFuzz.sol --contract VaultFuzz --config echidna.config.yml",
+    "coverage": "hardhat coverage",
+    "gas": "REPORT_GAS=true hardhat test",
+    "deploy:sepolia": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:arbitrum": "hardhat run scripts/deploy.js --network arbitrumSepolia",
+    "deploy:polygon": "hardhat run scripts/deploy.js --network polygonMumbai",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost",
+    "node": "hardhat node",
+    "clean": "hardhat clean",
+    "size": "hardhat size-contracts",
+    "verify": "hardhat verify"
   },
   "repository": {
     "type": "git",

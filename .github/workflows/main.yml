@@ -1,0 +1,216 @@
+name: SafeLend Vault CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '18'
+  SOLIDITY_VERSION: '0.8.20'
+
+jobs:
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Compile contracts
+      run: npx hardhat compile
+
+    - name: Run unit tests
+      run: npx hardhat test test/unit/*.js
+
+    - name: Run integration tests
+      run: npx hardhat test test/integration/*.js
+
+    - name: Generate coverage report
+      run: npx hardhat coverage
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage.json
+        fail_ci_if_error: false
+
+  security:
+    name: Security Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Slither
+      run: pip3 install slither-analyzer
+
+    - name: Run Slither analysis
+      run: slither . --exclude-dependencies --exclude-informational --exclude-low --exclude-medium || true
+
+    - name: Install Mythril
+      run: |
+        pip3 install mythril
+      continue-on-error: true
+
+    - name: Run Mythril analysis
+      run: |
+        for file in contracts/core/*.sol; do
+          echo "Analyzing $file..."
+          myth analyze "$file" --solv ${{ env.SOLIDITY_VERSION }} || true
+        done
+      continue-on-error: true
+
+  gas-optimization:
+    name: Gas Optimization Report
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run gas reporter
+      run: REPORT_GAS=true npx hardhat test
+
+    - name: Upload gas report
+      uses: actions/upload-artifact@v3
+      with:
+        name: gas-report
+        path: gas-report.txt
+
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Install Solhint
+      run: npm install -g solhint
+
+    - name: Run Solhint
+      run: solhint 'contracts/**/*.sol' --config .solhint.json || true
+
+    - name: Check contract size
+      run: npx hardhat size-contracts
+
+  deploy-testnet:
+    name: Deploy to Testnet
+    runs-on: ubuntu-latest
+    needs: [test, security, gas-optimization]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Deploy to Sepolia
+      run: npx hardhat run scripts/deploy.js --network sepolia
+      env:
+        SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+        PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+      continue-on-error: true
+
+    - name: Deploy to Arbitrum Sepolia
+      run: npx hardhat run scripts/deploy.js --network arbitrumSepolia
+      env:
+        ARBITRUM_SEPOLIA_RPC_URL: ${{ secrets.ARBITRUM_SEPOLIA_RPC_URL }}
+        PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+      continue-on-error: true
+
+    - name: Deploy to Polygon Mumbai
+      run: npx hardhat run scripts/deploy.js --network polygonMumbai
+      env:
+        POLYGON_MUMBAI_RPC_URL: ${{ secrets.POLYGON_MUMBAI_RPC_URL }}
+        PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
+      continue-on-error: true
+
+    - name: Verify contracts
+      run: |
+        npx hardhat verify --network sepolia || true
+        npx hardhat verify --network arbitrumSepolia || true
+        npx hardhat verify --network polygonMumbai || true
+      env:
+        ETHERSCAN_API_KEY: ${{ secrets.ETHERSCAN_API_KEY }}
+        ARBISCAN_API_KEY: ${{ secrets.ARBISCAN_API_KEY }}
+        POLYGONSCAN_API_KEY: ${{ secrets.POLYGONSCAN_API_KEY }}
+      continue-on-error: true
+
+  docker-build:
+    name: Docker Build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+      continue-on-error: true
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: ${{ github.ref == 'refs/heads/main' }}
+        tags: safelend/vault:latest,safelend/vault:${{ github.sha }}
+        cache-from: type=registry,ref=safelend/vault:buildcache
+        cache-to: type=registry,ref=safelend/vault:buildcache,mode=max
+      continue-on-error: true

@@ -1,0 +1,20 @@
+testMode: assertion
+testLimit: 50000
+seqLen: 100
+shrinkLimit: 5000
+coverage: true
+corpusDir: echidna-corpus
+contractAddr: "0x00a329c0648769A73afAc7F9381E08FB43dBEA72"
+deployer: "0x0000000000000000000000000000000000000000"
+sender: ["0x10000", "0x20000", "0x30000"]
+balanceContract: 1000000000000000000000
+balanceAddr: 100000000000000000000
+gasLimit: 0xffffffff
+gasPrice: 0
+maxTimeDelay: 604800
+maxBlockDelay: 60480
+prefix: "echidna_"
+cryticArgs: ["--solc-remaps", "@openzeppelin=node_modules/@openzeppelin"]
+solcArgs: ["--optimize", "--optimize-runs", "200"]
+quiet: false
+format: text
