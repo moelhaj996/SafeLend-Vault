@@ -184,7 +184,7 @@ This project is licensed under the MIT License.
 
 ## Security
 
-For security concerns, please email security@safelend.io
+For security concerns, please email moh.elnaim996@gmail.com
 
 ## Acknowledgments
 
