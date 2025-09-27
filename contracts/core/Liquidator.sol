@@ -69,12 +69,35 @@ contract Liquidator is AccessControl, ReentrancyGuard {
         uint256 healthFactor = vaultContract.getUserHealthFactor(borrower);
         require(healthFactor < 1e18, "Position is healthy");
 
+        // Get position details to know how much debt to repay
+        ISafeLendVault.Position memory position = vaultContract.getPosition(borrower);
+        uint256 totalDebt = position.borrowedAmount + position.accumulatedInterest;
+        uint256 maxDebtToRepay = (totalDebt * 110) / 100; // Add 10% buffer for any additional interest
+
+        // Get the asset from the vault
+        IERC20 asset = vaultContract.asset();
+
+        // Transfer tokens from keeper to this contract (with buffer for interest)
+        asset.transferFrom(msg.sender, address(this), maxDebtToRepay);
+
+        // Approve vault to take tokens from this contract
+        asset.approve(vault, maxDebtToRepay);
+
         uint256 collateralReceived = vaultContract.liquidate(borrower);
+
+        // Transfer collateral received back to the keeper
+        asset.transfer(msg.sender, collateralReceived);
+
+        // Transfer any remaining tokens back to the keeper
+        uint256 remainingBalance = asset.balanceOf(address(this));
+        if (remainingBalance > 0) {
+            asset.transfer(msg.sender, remainingBalance);
+        }
 
         LiquidationData memory data = LiquidationData({
             vault: vault,
             borrower: borrower,
-            debtToCover: 0,
+            debtToCover: totalDebt / 2,  // Actual debt covered (50% close factor)
             collateralReceived: collateralReceived,
             timestamp: block.timestamp,
             liquidator: msg.sender
@@ -83,7 +106,7 @@ contract Liquidator is AccessControl, ReentrancyGuard {
         liquidationHistory[borrower].push(data);
         totalLiquidations++;
 
-        emit LiquidationExecuted(vault, borrower, msg.sender, 0, collateralReceived);
+        emit LiquidationExecuted(vault, borrower, msg.sender, totalDebt / 2, collateralReceived);
 
         return collateralReceived;
     }

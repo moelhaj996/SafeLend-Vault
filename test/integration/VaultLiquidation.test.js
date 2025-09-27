@@ -82,7 +82,9 @@ describe("Vault Liquidation Integration", function () {
       const healthFactorBefore = await vault.getUserHealthFactor(alice.address);
       expect(healthFactorBefore).to.be.lt(ethers.parseEther("1"));
 
-      await asset.connect(liquidator).approve(await vault.getAddress(), ethers.parseEther("500"));
+      // Approve more than needed to handle interest accrual
+      const liquidationAmount = ethers.parseEther("1000");
+      await asset.connect(liquidator).approve(await vault.getAddress(), liquidationAmount);
       const collateralReceived = await vault.connect(liquidator).liquidate(alice.address);
 
       const healthFactorAfter = await vault.getUserHealthFactor(alice.address);
@@ -125,7 +127,10 @@ describe("Vault Liquidation Integration", function () {
       expect(canLiquidate).to.be.true;
       expect(expectedProfit).to.be.gt(0);
 
-      await asset.connect(keeper).approve(await vault.getAddress(), ethers.parseEther("500"));
+      // Approve tokens to both vault and liquidator contract (with buffer for interest)
+      const liquidationAmount = ethers.parseEther("2000");
+      await asset.connect(keeper).approve(await vault.getAddress(), liquidationAmount);
+      await asset.connect(keeper).approve(await liquidatorContract.getAddress(), liquidationAmount);
 
       await expect(liquidatorContract.connect(keeper).liquidate(await vault.getAddress(), alice.address))
         .to.emit(liquidatorContract, "LiquidationExecuted");
@@ -168,7 +173,10 @@ describe("Vault Liquidation Integration", function () {
       ];
       const borrowers = [alice.address, bob.address, charlie.address];
 
-      await asset.connect(keeper).approve(await vault.getAddress(), ethers.parseEther("2000"));
+      // Approve tokens to both vault and liquidator contract for batch operations
+      const batchLiquidationAmount = ethers.parseEther("3000");
+      await asset.connect(keeper).approve(await vault.getAddress(), batchLiquidationAmount);
+      await asset.connect(keeper).approve(await liquidatorContract.getAddress(), batchLiquidationAmount);
 
       const collateralReceived = await liquidatorContract.connect(keeper).batchLiquidate(vaults, borrowers);
 
@@ -253,7 +261,10 @@ describe("Vault Liquidation Integration", function () {
       };
       await vault.connect(alice).updateConfig(newConfig);
 
-      await asset.connect(keeper).approve(await vault.getAddress(), ethers.parseEther("500"));
+      // Approve tokens to both vault and liquidator contract (with buffer for interest)
+      const liquidationAmount = ethers.parseEther("2000");
+      await asset.connect(keeper).approve(await vault.getAddress(), liquidationAmount);
+      await asset.connect(keeper).approve(await liquidatorContract.getAddress(), liquidationAmount);
 
       await expect(liquidatorContract.connect(keeper).liquidate(await vault.getAddress(), alice.address))
         .to.be.revertedWith("Emergency stop activated");
@@ -305,7 +316,10 @@ describe("Vault Liquidation Integration", function () {
       };
       await vault.connect(alice).updateConfig(newConfig);
 
-      await asset.connect(keeper).approve(await vault.getAddress(), ethers.parseEther("500"));
+      // Approve tokens to both vault and liquidator contract (with buffer for interest)
+      const liquidationAmount = ethers.parseEther("2000");
+      await asset.connect(keeper).approve(await vault.getAddress(), liquidationAmount);
+      await asset.connect(keeper).approve(await liquidatorContract.getAddress(), liquidationAmount);
       await liquidatorContract.connect(keeper).liquidate(await vault.getAddress(), alice.address);
 
       const history = await liquidatorContract.getLiquidationHistory(alice.address);

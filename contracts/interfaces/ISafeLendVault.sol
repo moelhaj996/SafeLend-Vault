@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+
 interface ISafeLendVault {
     struct Position {
         uint256 collateralAmount;
@@ -42,4 +44,5 @@ interface ISafeLendVault {
     function getTotalBorrows() external view returns (uint256);
     function getUtilizationRate() external view returns (uint256);
     function getUserHealthFactor(address user) external view returns (uint256);
+    function asset() external view returns (IERC20);
 }
