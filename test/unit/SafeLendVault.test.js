@@ -236,7 +236,9 @@ describe("SafeLendVault", function () {
         ethers.parseEther("0.7"), // liquidationThreshold
         config.liquidationBonus,
         config.reserveFactor,
-        config.interestRateModel
+        config.interestRateModel,
+        config.oracle,
+        config.liquidationEnabled
       );
 
       // Get actual debt including accrued interest

@@ -51,7 +51,9 @@ contract SafeLendVault is ISafeLendVault, ERC20, AccessControl, ReentrancyGuard,
             liquidationBonus: 0.05e18,
             reserveFactor: 0.1e18,
             interestRateModel: _interestRateModel,
-            isPaused: false
+            oracle: address(0),
+            isPaused: false,
+            liquidationEnabled: true
         });
 
         lastAccrualBlock = block.number;
@@ -291,7 +293,9 @@ contract SafeLendVault is ISafeLendVault, ERC20, AccessControl, ReentrancyGuard,
         uint256 _liquidationThreshold,
         uint256 _liquidationBonus,
         uint256 _reserveFactor,
-        address _interestRateModel
+        address _interestRateModel,
+        address _oracle,
+        bool _liquidationEnabled
     ) external onlyRole(ADMIN_ROLE) {
         require(_collateralFactor <= 1e18, "Invalid collateral factor");
         require(_liquidationThreshold <= 1e18, "Invalid liquidation threshold");
@@ -304,7 +308,20 @@ contract SafeLendVault is ISafeLendVault, ERC20, AccessControl, ReentrancyGuard,
         config.liquidationBonus = _liquidationBonus;
         config.reserveFactor = _reserveFactor;
         config.interestRateModel = _interestRateModel;
+        config.oracle = _oracle;
+        config.liquidationEnabled = _liquidationEnabled;
 
         interestRateModel = IInterestRateModel(_interestRateModel);
+    }
+
+    function updateConfig(VaultConfig memory _config) external onlyRole(ADMIN_ROLE) {
+        require(_config.collateralFactor <= 1e18, "Invalid collateral factor");
+        require(_config.liquidationThreshold <= 1e18, "Invalid liquidation threshold");
+        require(_config.liquidationBonus <= 1e18, "Invalid liquidation bonus");
+        require(_config.reserveFactor <= 1e18, "Invalid reserve factor");
+        require(_config.interestRateModel != address(0), "Invalid interest rate model");
+
+        config = _config;
+        interestRateModel = IInterestRateModel(_config.interestRateModel);
     }
 }

@@ -15,7 +15,9 @@ interface ISafeLendVault {
         uint256 liquidationBonus;
         uint256 reserveFactor;
         address interestRateModel;
+        address oracle;
         bool isPaused;
+        bool liquidationEnabled;
     }
 
     event Deposit(address indexed user, uint256 amount, uint256 shares);

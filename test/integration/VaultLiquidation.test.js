@@ -68,8 +68,14 @@ describe("Vault Liquidation Integration", function () {
 
       const config = await vault.config();
       const newConfig = {
-        ...config,
-        liquidationThreshold: ethers.parseEther("0.7")
+        collateralFactor: config.collateralFactor,
+        liquidationThreshold: ethers.parseEther("0.7"),
+        liquidationBonus: config.liquidationBonus,
+        reserveFactor: config.reserveFactor,
+        interestRateModel: config.interestRateModel,
+        oracle: config.oracle,
+        isPaused: config.isPaused,
+        liquidationEnabled: config.liquidationEnabled
       };
       await vault.connect(alice).updateConfig(newConfig);
 
@@ -101,8 +107,14 @@ describe("Vault Liquidation Integration", function () {
 
       const config = await vault.config();
       const newConfig = {
-        ...config,
-        liquidationThreshold: ethers.parseEther("0.7")
+        collateralFactor: config.collateralFactor,
+        liquidationThreshold: ethers.parseEther("0.7"),
+        liquidationBonus: config.liquidationBonus,
+        reserveFactor: config.reserveFactor,
+        interestRateModel: config.interestRateModel,
+        oracle: config.oracle,
+        isPaused: config.isPaused,
+        liquidationEnabled: config.liquidationEnabled
       };
       await vault.connect(alice).updateConfig(newConfig);
 
@@ -138,8 +150,14 @@ describe("Vault Liquidation Integration", function () {
 
       const config = await vault.config();
       const newConfig = {
-        ...config,
-        liquidationThreshold: ethers.parseEther("0.7")
+        collateralFactor: config.collateralFactor,
+        liquidationThreshold: ethers.parseEther("0.7"),
+        liquidationBonus: config.liquidationBonus,
+        reserveFactor: config.reserveFactor,
+        interestRateModel: config.interestRateModel,
+        oracle: config.oracle,
+        isPaused: config.isPaused,
+        liquidationEnabled: config.liquidationEnabled
       };
       await vault.connect(alice).updateConfig(newConfig);
 
@@ -185,8 +203,14 @@ describe("Vault Liquidation Integration", function () {
 
       const config = await vault.config();
       const newConfig = {
-        ...config,
-        liquidationThreshold: ethers.parseEther("0.7")
+        collateralFactor: config.collateralFactor,
+        liquidationThreshold: ethers.parseEther("0.7"),
+        liquidationBonus: config.liquidationBonus,
+        reserveFactor: config.reserveFactor,
+        interestRateModel: config.interestRateModel,
+        oracle: config.oracle,
+        isPaused: config.isPaused,
+        liquidationEnabled: config.liquidationEnabled
       };
       await vault.connect(alice).updateConfig(newConfig);
 
@@ -218,8 +242,14 @@ describe("Vault Liquidation Integration", function () {
 
       const config = await vault.config();
       const newConfig = {
-        ...config,
-        liquidationThreshold: ethers.parseEther("0.7")
+        collateralFactor: config.collateralFactor,
+        liquidationThreshold: ethers.parseEther("0.7"),
+        liquidationBonus: config.liquidationBonus,
+        reserveFactor: config.reserveFactor,
+        interestRateModel: config.interestRateModel,
+        oracle: config.oracle,
+        isPaused: config.isPaused,
+        liquidationEnabled: config.liquidationEnabled
       };
       await vault.connect(alice).updateConfig(newConfig);
 
@@ -264,8 +294,14 @@ describe("Vault Liquidation Integration", function () {
 
       const config = await vault.config();
       const newConfig = {
-        ...config,
-        liquidationThreshold: ethers.parseEther("0.7")
+        collateralFactor: config.collateralFactor,
+        liquidationThreshold: ethers.parseEther("0.7"),
+        liquidationBonus: config.liquidationBonus,
+        reserveFactor: config.reserveFactor,
+        interestRateModel: config.interestRateModel,
+        oracle: config.oracle,
+        isPaused: config.isPaused,
+        liquidationEnabled: config.liquidationEnabled
       };
       await vault.connect(alice).updateConfig(newConfig);
 
